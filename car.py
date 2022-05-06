@@ -3,6 +3,15 @@ import time
 import math 
 
 
+def blit_rotate_center(win, image, top_left, angle):
+    rotated_image = pygame.transform.rotate(image, angle)
+    new_rect = rotated_image.get_rect(
+        center=image.get_rect(topleft=top_left).center)
+    win.blit(rotated_image, new_rect.topleft)
+
+
+
+
 Track = pygame.image.load("C:\\Users\\9396238\\OneDrive\\Final Project\\racetrack1.png")
 Track = pygame.transform.scale(Track, (1000, 1000))
 Blue_Car = pygame.image.load("C:\\Users\\9396238\OneDrive\\Final Project\\pixel_racecar_blue.png")
@@ -11,18 +20,21 @@ WIDTH, HEIGHT = Track.get_width(), Track.get_height()
 
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 
+start_position = (180, 200)
+
+
 pygame.display.set_caption('Racing Game')
 
-FPS = 60 
-'''
+FPS = 100 
+
 class Car: 
     def __init__(self, max_vel, rotation_vel):
-        self.img = self.IMG 
+        self.img = Blue_Car 
         self.max_vel = max_vel 
         self.vel = 0 
         self.rotation_vel = rotation_vel
         self.angle = 0 
-        self.x, self.y = self.START_POS
+        self.x, self.y = self.START_POS 
         self.acceleration = .1 
     
     def rotate(self, left=False, right=False):
@@ -32,8 +44,7 @@ class Car:
             self.angle -= self.rotation_vel
 
     def draw(self, win):
-        rotated_image = pygame.transform.rotate(self.img, self.angle)
-        rotated_image.get_rect(center = self.img.get_rect(center = (self.x, self.y)))
+        blit_rotate_center(win, self.img, (self.x, self.y), self.angle)
 
 
     def move_forward(self):
@@ -57,24 +68,28 @@ class PlayerCar(Car):
     IMG = Blue_Car
     START_POS = (180, 200)
 
-'''
-def draw(win):
-    
-    win.blit()
+
+def draw(win, images, player_car):
+    for img, pos in images:
+        win.blit(img, pos)
+
+    player_car.draw(win)
+    pygame.display.update()
+
 
     
-    pygame.display.update()
 
 
 run = True
 clock = pygame.time.Clock()
 images = [(Track, (0, 0))]
-#player_car = PlayerCar(4, 4)
+player_car = PlayerCar(4, 4)
 
 while run:
     clock.tick(FPS)
 
-    WINDOW.blit(Track, (0,0))
+
+    draw(WINDOW, images, player_car)
     pygame.display.update()
 
     for event in pygame.event.get():
@@ -84,7 +99,7 @@ while run:
 
     keys = pygame.key.get_pressed()
     moved = False
-'''
+
     if keys[pygame.K_a]:
         player_car.rotate(left=True)
     if keys[pygame.K_d]:
@@ -95,6 +110,6 @@ while run:
 
     if not moved:
         player_car.reduce_speed()
-'''
+
 
 pygame.quit()
