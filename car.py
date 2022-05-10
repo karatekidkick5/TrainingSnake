@@ -14,6 +14,18 @@ def blit_rotate_center(win, image, top_left, angle):
 
 Track = pygame.image.load("C:\\Users\\9396238\\OneDrive\\Final Project\\racetrack1.png")
 Track = pygame.transform.scale(Track, (1000, 1000))
+
+
+
+Track_Border = pygame.image.load("C:\\Users\\9396238\\OneDrive\\Final Project\\border2.png")
+Track_Border = pygame.transform.scale(Track_Border, (1000, 1000))
+Track_Border_Mask = pygame.mask.from_surface(Track_Border)
+
+
+
+
+
+
 Blue_Car = pygame.image.load("C:\\Users\\9396238\OneDrive\\Final Project\\pixel_racecar_blue.png")
 
 WIDTH, HEIGHT = Track.get_width(), Track.get_height()
@@ -62,6 +74,27 @@ class Car:
     def reduce_speed(self):
         self.vel = max(self.vel - self.acceleration / 2, 0)
         self.move()
+    
+    def move(self):
+        radians = math.radians(self.angle)
+        vertical = math.cos(radians) * self.vel 
+        horizontal = math.sin(radians) * self.vel 
+
+        self.y -= vertical 
+        self.x -= horizontal 
+
+
+    def collide(self, mask, x=0, y=0):
+        car_mask = pygame.mask.from_surface(self.img)
+        offset = (int(self.x - x), int(self.y - y))
+        poi = mask.overlap(car_mask, offset)
+        return poi
+
+    def reset(self):
+        self.x, self.y = self.START_POS
+        self.angle = 0
+        self.vel = 0
+
 
 
 class PlayerCar(Car):
@@ -76,27 +109,15 @@ def draw(win, images, player_car):
     player_car.draw(win)
     pygame.display.update()
 
+def bounce(self):
+    self.vel = -self.vel
+    self.move()
 
-    
+def reduce_speed(self):
+     self.vel = max(self.vel - self.acceleration / 2, 0)
+     self.move()
 
-
-run = True
-clock = pygame.time.Clock()
-images = [(Track, (0, 0))]
-player_car = PlayerCar(4, 4)
-
-while run:
-    clock.tick(FPS)
-
-
-    draw(WINDOW, images, player_car)
-    pygame.display.update()
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-            break
-
+def move_player(self, player_car): 
     keys = pygame.key.get_pressed()
     moved = False
 
@@ -112,4 +133,32 @@ while run:
         player_car.reduce_speed()
 
 
+
+
+
+run = True
+clock = pygame.time.Clock()
+images = [(Track, (0, 0)), (Track_Border, (0,0))]
+player_car = PlayerCar(4, 4)
+
+while run:
+    clock.tick(FPS)
+
+
+    draw(WINDOW, images, player_car)
+
+    pygame.display.update()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+            break
+    
+    move_player(player_car)
+
+    if player_car.collide(Track_Border_Mask) != None:
+        player_car.bounce()
+    
+
 pygame.quit()
+
