@@ -1,127 +1,255 @@
-import pygame
-import time
-import random
- 
-pygame.init()
- 
-white = (255, 255, 255)
-yellow = (255, 255, 102)
-black = (0, 0, 0)
-red = (213, 50, 80)
-green = (0, 255, 0)
-blue = (50, 153, 213)
- 
-dis_width = 600
-dis_height = 400
- 
-dis = pygame.display.set_mode((dis_width, dis_height))
-pygame.display.set_caption('Snake Game by Edureka')
- 
+import pygame 
+import time 
+import math 
+
+
+def blit_rotate_center(win, image, top_left, angle):
+    rotated_image = pygame.transform.rotate(image, angle)
+    new_rect = rotated_image.get_rect(
+        center=image.get_rect(topleft=top_left).center)
+    win.blit(rotated_image, new_rect.topleft)
+
+
+
+
+Track = pygame.image.load("racetrack1.png")
+Track = pygame.transform.scale(Track, (800, 800))
+
+
+
+Track_Border = (62,171,83)
+
+Path = [(101, 137), (45, 222), (84, 307), (414, 320), (466, 404), (402, 488), (84, 492), (45, 581), (78, 661), (681, 666), (677, 143), (455, 129), (343, 34)]
+
+
+
+
+
+Blue_Car = pygame.image.load("pixel_racecar_blue.png")
+
+WIDTH, HEIGHT = Track.get_width(), Track.get_height()
+
+WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+
+
+
+pygame.display.set_caption('Racing Game')
+
+FPS = 100 
+
+class Car: 
+    def __init__(self, max_vel, rotation_vel):
+        self.img = Blue_Car 
+        self.max_vel = max_vel 
+        self.vel = 0 
+        self.rotation_vel = rotation_vel
+        self.angle = 0 
+        self.x, self.y = self.START_POS 
+        self.acceleration = .1 
+    
+    def rotate(self, left=False, right=False):
+        if left:
+            self.angle += self.rotation_vel
+        elif right:
+            self.angle -= self.rotation_vel
+
+        
+
+    def draw(self, win):
+        blit_rotate_center(win, self.img, (self.x, self.y), self.angle)
+
+
+    def move_forward(self):
+        self.vel = min(self.vel + self.acceleration, self.max_vel)
+        self.move()
+
+    def move(self):
+        radians = math.radians(self.angle)
+        vertical = math.cos(radians) * self.vel
+        horizontal = math.sin(radians) * self.vel
+
+        self.y -= vertical
+        self.x -= horizontal
+
+    def reduce_speed(self):
+        self.vel = max(self.vel - self.acceleration / 2, 0)
+        self.move()
+    
+    def move(self):
+        radians = math.radians(self.angle)
+        vertical = math.cos(radians) * self.vel 
+        horizontal = math.sin(radians) * self.vel 
+
+        self.y -= vertical 
+        self.x -= horizontal 
+
+
+    def collide(self, mask, x=0, y=0):
+        car_mask = pygame.mask.from_surface(self.img)
+        offset = (int(self.x - x), int(self.y - y))
+        poi = mask.overlap(car_mask, offset)
+        return poi
+
+    def reset(self):
+        self.x, self.y = self.START_POS
+        self.angle = 0
+        self.vel = 0
+    
+    def bounce(self):
+        self.vel = -self.vel
+        self.move()
+
+    def reduce_speed(self):
+        self.vel -= self.vel
+        self.move()
+
+
+
+class PlayerCar(Car):
+  
+    IMG = Blue_Car
+    START_POS = (185, 134)
+
+
+
+
+
+class ComputerCar(Car):
+    Img = Blue_Car
+    START_POS = (185, 134)
+
+    def __init__(self, max_vel, rotation_vel, path=[]):
+        super().__init__(max_vel, rotation_vel)
+        self.path = path 
+        self.current_point = 0 
+        self.vel = max_vel 
+
+    def draw_points(self, win):
+        for point in self.path:
+            pygame.draw.circle(win, (255, 0, 0), point, 5)
+    
+    def draw(self, win):
+        super().draw(win)
+    
+    def calculate_angle(self):
+        target_x, target_y = self.path[self.current_point]
+        x_diff = target_x - self.x
+        y_diff = target_y - self.y
+
+        if y_diff == 0:
+            desired_radian_angle = math.pi / 2
+        else:
+            desired_radian_angle = math.atan(x_diff / y_diff)
+
+        if target_y > self.y:
+            desired_radian_angle += math.pi
+
+        difference_in_angle = self.angle - math.degrees(desired_radian_angle)
+        if difference_in_angle >= 180:
+            difference_in_angle -= 360
+
+        if difference_in_angle > 0:
+            self.angle -= min(self.rotation_vel, abs(difference_in_angle))
+        else:
+            self.angle += min(self.rotation_vel, abs(difference_in_angle))
+
+    def update_path_point(self):
+        target = self.path[self.current_point]
+        rect = pygame.Rect(
+            self.x, self.y, self.img.get_width(), self.img.get_height())
+        if rect.collidepoint(*target):
+            self.current_point += 1
+
+    def move(self):
+        if self.current_point >= len(self.path):
+            return
+
+        self.calculate_angle()
+        self.update_path_point()
+        super().move()
+        
+
+
+
+def move_player(player_car): 
+    keys = pygame.key.get_pressed()
+    moved = False
+
+    if keys[pygame.K_a]:
+        player_car.rotate(left=True)
+    if keys[pygame.K_d]:
+        player_car.rotate(right=True)
+    if keys[pygame.K_w]:
+        moved = True
+        player_car.move_forward()
+
+    if not moved:
+        player_car.reduce_speed()
+
+
+
+def draw(win, images, player_car, computer_car):
+    for img, pos in images:
+        win.blit(img, pos)
+
+    player_car.draw(win)
+    computer_car.draw(win)
+
+    x = player_car.x
+
+    x = x + 5 
+
+    x = round(x)
+
+    y = player_car.y
+
+    y = round(y)
+
+    y = y + 5
+
+# (101, 137), (45, 222), (84, 307)
+    print("Cordinates (x&y)")
+    print(x, y)
+
+    good = win.get_at((x, y))
+
+    if win.get_at((x, y)) == (62, 171, 83):
+
+        player_car.bounce()
+        print('collided')
+
+
+   
+    pygame.display.update()
+
+
+run = True
 clock = pygame.time.Clock()
- 
-snake_block = 10
-snake_speed = 15
- 
-font_style = pygame.font.SysFont("bahnschrift", 25)
-score_font = pygame.font.SysFont("comicsansms", 35)
- 
- 
-def Your_score(score):
-    value = score_font.render("Your Score: " + str(score), True, yellow)
-    dis.blit(value, [0, 0])
- 
- 
- 
-def our_snake(snake_block, snake_list):
-    for x in snake_list:
-        pygame.draw.rect(dis, black, [x[0], x[1], snake_block, snake_block])
- 
- 
-def message(msg, color):
-    mesg = font_style.render(msg, True, color)
-    dis.blit(mesg, [dis_width / 6, dis_height / 3])
- 
- 
-def gameLoop():
-    game_over = False
-    game_close = False
- 
-    x1 = dis_width / 2
-    y1 = dis_height / 2
- 
-    x1_change = 0
-    y1_change = 0
- 
-    snake_List = []
-    Length_of_snake = 1
- 
-    foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10.0
-    foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10.0
- 
-    while not game_over:
- 
-        while game_close == True:
-            dis.fill(blue)
-            message("You Lost! Press C-Play Again or Q-Quit", red)
-            Your_score(Length_of_snake - 1)
-            pygame.display.update()
- 
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        game_over = True
-                        game_close = False
-                    if event.key == pygame.K_c:
-                        gameLoop()
- 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_over = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    x1_change = -snake_block
-                    y1_change = 0
-                elif event.key == pygame.K_RIGHT:
-                    x1_change = snake_block
-                    y1_change = 0
-                elif event.key == pygame.K_UP:
-                    y1_change = -snake_block
-                    x1_change = 0
-                elif event.key == pygame.K_DOWN:
-                    y1_change = snake_block
-                    x1_change = 0
- 
-        if x1 >= dis_width or x1 < 0 or y1 >= dis_height or y1 < 0:
-            game_close = True
-        x1 += x1_change
-        y1 += y1_change
-        dis.fill(blue)
-        pygame.draw.rect(dis, green, [foodx, foody, snake_block, snake_block])
-        snake_Head = []
-        snake_Head.append(x1)
-        snake_Head.append(y1)
-        snake_List.append(snake_Head)
-        if len(snake_List) > Length_of_snake:
-            del snake_List[0]
- 
-        for x in snake_List[:-1]:
-            if x == snake_Head:
-                game_close = True
- 
-        our_snake(snake_block, snake_List)
-        Your_score(Length_of_snake - 1)
- 
-        pygame.display.update()
- 
-        if x1 == foodx and y1 == foody:
-            foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10.0
-            foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10.0
-            Length_of_snake += 1
- 
-        clock.tick(snake_speed)
- 
-    pygame.quit()
-    quit()
- 
- 
-gameLoop()
+images = [(Track, (0, 0))]
+player_car = PlayerCar(4, 4)
+computer_car = ComputerCar(4, 4, Path)
+while run:
+    clock.tick(FPS)
+
+
+    draw(WINDOW, images, player_car, computer_car)
+
+    pygame.display.update()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+            break
+    
+
+    
+    move_player(player_car)
+    computer_car.move()
+
+
+
+
+   
+    
+
+pygame.quit()
