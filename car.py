@@ -13,13 +13,13 @@ def blit_rotate_center(win, image, top_left, angle):
 
 
 Track = pygame.image.load("racetrack1.png")
-Track = pygame.transform.scale(Track, (800, 800))
+Track = pygame.transform.scale(Track, (1000, 1000))
 
 
 
 Track_Border = (62,171,83)
 
-Path = [(101, 137), (45, 222), (84, 307), (414, 320), (466, 404), (402, 488), (84, 492), (45, 581), (78, 661), (681, 666), (677, 143), (455, 129), (343, 34)]
+Path = PATH = [(109, 544), (423, 831), (492, 609), (577, 558), (662, 596), (695, 794), (764, 829), (760, 848), (823, 452), (495, 422), (477, 370), (529, 329), (815, 313), (836, 212), (809, 131), (367, 136), (338, 435), (288, 485), (205, 132)]
 
 
 
@@ -38,7 +38,7 @@ WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 
 pygame.display.set_caption('Racing Game')
 
-FPS = 100 
+FPS = 1000
 
 class Car: 
     def __init__(self, max_vel, rotation_vel):
@@ -88,6 +88,7 @@ class Car:
         self.x -= horizontal 
 
     def hit(self, win):
+       # print(self.x, self.y)
         x = self.x
         x = x 
         x = round(x)
@@ -96,7 +97,7 @@ class Car:
 
         if win.get_at((x, y)) ==  (79,176,95):
            player_car.bounce()
-           print('collided')
+         #  print('collided')
 
 
         
@@ -234,7 +235,7 @@ clock = pygame.time.Clock()
 images = [(Track, (0, 0))]
 player_car = PlayerCar(4, 4)
 computer_car = ComputerCar(3, 3, Path)
-computer_car2 = ComputerCar(4, 4, Path)
+computer_car2 = ComputerCar(7, 7, Path)
 
 #computer_car2 = ComputerCar(4, 4, Path_Reverse)
 while run:
