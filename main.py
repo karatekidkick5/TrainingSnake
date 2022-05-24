@@ -13,19 +13,22 @@ def blit_rotate_center(win, image, top_left, angle):
 
 
 Track = pygame.image.load("racetrack1.png")
-Track = pygame.transform.scale(Track, (800, 800))
+Track = pygame.transform.scale(Track, (1000, 1000))
 
 
 
 Track_Border = (62,171,83)
 
-Path = [(101, 137), (45, 222), (84, 307), (414, 320), (466, 404), (402, 488), (84, 492), (45, 581), (78, 661), (681, 666), (677, 143), (455, 129), (343, 34)]
+Path = PATH = [(109, 544), (423, 831), (492, 609), (577, 558), (662, 596), (695, 794), (764, 829), (760, 848), (823, 452), (495, 422), (477, 370), (529, 329), (815, 313), (836, 212), (809, 131), (367, 136), (338, 435), (288, 485), (205, 132)]
+
 
 
 
 
 
 Blue_Car = pygame.image.load("pixel_racecar_blue.png")
+
+Orange_car = pygame.image.load("pixel_racecar_orange.png")
 
 WIDTH, HEIGHT = Track.get_width(), Track.get_height()
 
@@ -35,17 +38,22 @@ WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 
 pygame.display.set_caption('Racing Game')
 
-FPS = 100 
+FPS = 1000
 
 class Car: 
     def __init__(self, max_vel, rotation_vel):
         self.img = Blue_Car 
+        self.rect = self.img.get_rect()
         self.max_vel = max_vel 
         self.vel = 0 
         self.rotation_vel = rotation_vel
         self.angle = 0 
         self.x, self.y = self.START_POS 
+
+        self.rect.x, self.rect.y = self.START_POS
         self.acceleration = .1 
+        
+
     
     def rotate(self, left=False, right=False):
         if left:
@@ -63,13 +71,6 @@ class Car:
         self.vel = min(self.vel + self.acceleration, self.max_vel)
         self.move()
 
-    def move(self):
-        radians = math.radians(self.angle)
-        vertical = math.cos(radians) * self.vel
-        horizontal = math.sin(radians) * self.vel
-
-        self.y -= vertical
-        self.x -= horizontal
 
     def reduce_speed(self):
         self.vel = max(self.vel - self.acceleration / 2, 0)
@@ -80,8 +81,27 @@ class Car:
         vertical = math.cos(radians) * self.vel 
         horizontal = math.sin(radians) * self.vel 
 
+        self.rect.x -= horizontal
+        self.rect.y -= vertical
+
         self.y -= vertical 
         self.x -= horizontal 
+
+    def hit(self, win):
+       # print(self.x, self.y)
+        x = self.x
+        x = x 
+        x = round(x)
+        y = self.y 
+        y = round(y)
+
+        if win.get_at((x, y)) ==  (79,176,95):
+           player_car.bounce()
+         #  print('collided')
+
+
+        
+
 
 
     def collide(self, mask, x=0, y=0):
@@ -96,7 +116,7 @@ class Car:
         self.vel = 0
     
     def bounce(self):
-        self.vel = -self.vel
+        self.vel -= self.vel 
         self.move()
 
     def reduce_speed(self):
@@ -115,7 +135,7 @@ class PlayerCar(Car):
 
 
 class ComputerCar(Car):
-    Img = Blue_Car
+    Img = Orange_car
     START_POS = (185, 134)
 
     def __init__(self, max_vel, rotation_vel, path=[]):
@@ -164,6 +184,16 @@ class ComputerCar(Car):
         if self.current_point >= len(self.path):
             return
 
+        if self.path == self.path[-1]:
+            self.path == self.path[0]
+        self.calculate_angle()
+        self.update_path_point()
+        super().move()
+    
+    def reverse_move(self):
+        if self.current_point <= len(self.path):
+            return
+
         self.calculate_angle()
         self.update_path_point()
         super().move()
@@ -188,38 +218,15 @@ def move_player(player_car):
 
 
 
-def draw(win, images, player_car, computer_car):
+def draw(win, images, player_car, computer_car, computer_car2):
     for img, pos in images:
         win.blit(img, pos)
 
     player_car.draw(win)
     computer_car.draw(win)
+    computer_car2.draw(win)
 
-    x = player_car.x
-
-    x = x + 5 
-
-    x = round(x)
-
-    y = player_car.y
-
-    y = round(y)
-
-    y = y + 5
-
-# (101, 137), (45, 222), (84, 307)
-    print("Cordinates (x&y)")
-    print(x, y)
-
-    good = win.get_at((x, y))
-
-    if win.get_at((x, y)) == (62, 171, 83):
-
-        player_car.bounce()
-        print('collided')
-
-
-   
+    player_car.hit(win)
     pygame.display.update()
 
 
@@ -227,12 +234,15 @@ run = True
 clock = pygame.time.Clock()
 images = [(Track, (0, 0))]
 player_car = PlayerCar(4, 4)
-computer_car = ComputerCar(4, 4, Path)
+computer_car = ComputerCar(3, 3, Path)
+computer_car2 = ComputerCar(7, 7, Path)
+
+#computer_car2 = ComputerCar(4, 4, Path_Reverse)
 while run:
     clock.tick(FPS)
 
 
-    draw(WINDOW, images, player_car, computer_car)
+    draw(WINDOW, images, player_car, computer_car, computer_car2)
 
     pygame.display.update()
 
@@ -241,10 +251,29 @@ while run:
             run = False
             break
     
+    keys = pygame.key.get_pressed()
+
+    move_player(player_car)
+
+
+    computer_car.move()
+
+    if computer_car.x != 185:
+        computer_car2.move()
 
     
-    move_player(player_car)
-    computer_car.move()
+
+
+
+    
+
+        
+    
+
+    
+
+    
+
 
 
 
